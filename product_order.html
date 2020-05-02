@@ -1,0 +1,189 @@
+<html>
+    <head>
+        <meta charset="utf-8" /> 
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+        <!-- CSS -->
+    </head>
+    <body>
+        <!-- Page Title -->
+        <h2> We have a large inventory of many things. </h2>
+        <h3> Search our invenroy then place an Order </h3>
+        <br/>
+        <p>
+        Select a catergory, then choose a product.
+        </p>
+        <!-- start form -->
+        <form>
+        <label for="category">Choose a category:</label>
+        <select id="category">
+            <!-- add an empty value -->
+            <option value="*">- Select -</option>
+        </select>
+             
+        <label for="products">Choose a product:</label>
+        <select id="products">
+            <!-- add an empty value -->
+            <option value="*">- Select -</option>
+        </select> 
+        <input type="submit" class="submit" id="submit" value="View">
+        </form>
+        
+        <div id="ppiTable" class="test" > 
+        </div>
+        <label for="submit1">Choose an amount:</label>
+        <select type="submit" class="submit1" id="submit1" value="Quantity">
+            <option value="*">- Select -</option>
+        <div id="ppiTable1" class="tessdt" > 
+        </div>
+
+
+        
+        <script type="text/javascript">
+            //document ready function
+            $(document).ready(function(){ // wait until doc. completely loaded
+                updatecategoryInput();  
+                    
+                $('#category').on('change', function(){
+                    updateproductInput();
+                });
+
+                $(".submit").prop('disabled',true);
+                $('#products').change(function() {
+                        if ($('#products').val() == 0) {
+                            $(".submit").prop('disabled',true);
+                        } else {
+                                $(".submit").prop('disabled',false);
+        }
+    });
+                $(".submit1").prop('disabled',true);
+                $('#ppiTable').change(function() {
+                        if ($('.ppiTable').is(':empty') ) {
+                            $(".submit1").prop('disabled',true);
+
+        }
+    });
+          
+                $("form").on('submit', function(event){
+                    event.preventDefault();
+                    getPpiRows();
+                    
+                });
+            });
+            
+            var updatecategoryInput = function(){
+                //get the gene names into the target gene drop down menu
+                //use ajax here
+                //note the different parameters and the function used to write the new options
+                $.ajax({
+                    url: 'https://bioed.bu.edu/cgi-bin/students_20/cwill96/product_order_cgi.py',
+                    type: 'get',
+                    //it's important to write the data correctly, name:value pairs, as strings, in braces 
+                    data: {'table':'Categories'},
+                    //define a function to use the ajax response
+                    success: function(response){
+                        //trim off the trailing newline in the response, split the response into parts at the 
+                        //remaining new lines, and store the parts in the lines array
+                        //for each line of the response, write an input option 
+                        var lines = response.trim().split("\n");
+                        lines.forEach(function(value){
+                            //.append means to add at the end of what's already there in this element
+                            $("#category").append("<option value='"+value+"'>"+value+"</option>");
+                        });
+                    }
+                });
+            };
+            var updateInput = function(){
+                gene_name=$("#category").val();
+                path_name=$("#products").val();
+                //get the gene names into the target gene drop down menu
+                //use ajax here
+                //note the different parameters and the function used to write the new options
+                $.ajax({
+                    url: 'https://bioed.bu.edu/cgi-bin/students_20/cwill96/product_order_cgi.py',
+                    type: 'get',
+                    //it's important to write the data correctly, name:value pairs, as strings, in braces 
+                    data: {'table1':'Categories1','path_name':path_name,'gene_name':gene_name},
+                    //define a function to use the ajax response
+                    success: function(response){
+                        //trim off the trailing newline in the response, split the response into parts at the 
+                        //remaining new lines, and store the parts in the lines array
+                        //for each line of the response, write an input option 
+                        $("#products").empty();
+                        $("#products").append("<option value='*'>- Select -</option>")
+                        var lines = response.trim().split("\n");
+                        lines.forEach(function(value){
+                            //.append means to add at the end of what's already there in this element
+                            $("#submit1").append("<option value='"+value+"'>"+value+"</option>");
+                        });
+                    }
+                });
+            };
+            var updateproductInput = function(){
+                //get the pathway names into the pathway drop down menu
+                //use ajax here
+                //note we have to send the gene name to get the related pathways
+                cate_name=$("#category").val();
+                $.ajax({
+                    url: 'https://bioed.bu.edu/cgi-bin/students_20/cwill96/product_order_cgi.py',
+                    type: 'get',
+                    //it's important to get the form of the data right, 
+                    //name:value pairs, as strings, separated by commas, in braces 
+                    data: {'table':'Products','cate_name':cate_name},
+                    success: function(response){
+                        // clear any existing pathway options from a previous selection
+                        $("#products").empty();
+                        $("#products").append("<option value='*'>- Select -</option>")
+                        //trim off the trailing newline in the response, split the response into parts at the 
+                        //remaining new lines, and store the parts in the lines array
+                        //for each line of the response, write an input option 
+                        var lines = response.trim().split("\n");
+                        lines.forEach(function(value){
+                            //.append means to add at the end of what's already there in this element
+                            $("#products").append("<option value='"+value+"'>"+value+"</option>");
+                        });
+                    }
+                });
+                
+            };
+            
+            var getPpiRows = function(){
+                gene_name=$("#category").val();
+                path_name=$("#products").val();
+                $.ajax({
+                    url: 'https://bioed.bu.edu/cgi-bin/students_20/cwill96/product_order_cgi.py',
+                    type: 'get',
+                    //it's important to get the form of the data right, 
+                    //name:value pairs, as strings, separated by commas, in braces 
+                    //don't need gene_name here
+                    data: {'submit':'submit','path_name':path_name,'gene_name':gene_name},
+                    success: function(response){
+
+                        updateInput();
+                        $(".submit1").prop('disabled',false);
+                        // clear any existing html in the ppiTable div
+                        $("#ppiTable").empty();
+                        //append the table title
+                        $("#ppiTable").append("<h3>Inventory</h3>");
+                        //append the names of the target gene and pathway
+                        $("#ppiTable").append("<b>Category Selected: "+path_name+"</b><br>");
+                        $("#ppiTable").append("<b>Product Selected: "+gene_name+"</b>");
+                        //append the interacting proteins table
+                        $("#ppiTable").append("<table><tbody><tr><th>Product</th><th>Quantity</th><th>Price</th></tr></tbody></table>");
+                        //trim off the trailing newline in the response, split the response into parts at the 
+                        //remaining new lines, and store the parts in the lines array
+                        //for each line of the response, write an input option 
+                        var lines = response.trim().split("\n");
+                        lines.forEach(function(value){
+                            //split the individual lines into two parts pid_name1 and pid_name2
+                            proteins = value.split(" ");
+                            //append the rows to the tbody tag
+                            $("#ppiTable tbody").append("<tr><td>"+proteins[0]+"</td><td>"+proteins[1]+"</td><td>"+proteins[2]+"</td></tr>");
+                        });
+                    }
+                });
+            };
+
+        </script>
+    </body>
+</html>
